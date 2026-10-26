@@ -769,10 +769,12 @@ fn main() {
         .build(tauri::generate_context!())
         .expect("error while building Pinleaf")
         .run(|_app, event| {
-            // Keep running in the tray when the last note window is closed; the app exits only
-            // via tray → Quit (which calls app.exit).
-            if let tauri::RunEvent::ExitRequested { api, .. } = event {
-                api.prevent_exit();
+            // Keep running in the tray when the last note window closes (code: None), but let an
+            // explicit quit (tray → Quit calls app.exit(0), code: Some) actually exit.
+            if let tauri::RunEvent::ExitRequested { code, api, .. } = event {
+                if code.is_none() {
+                    api.prevent_exit();
+                }
             }
         });
 }
