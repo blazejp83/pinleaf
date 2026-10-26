@@ -1,0 +1,39 @@
+name: release
+
+# Build the Windows installer and publish a GitHub Release whenever a v* tag is pushed.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (stable, MSVC)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build installer and publish release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # tauri.conf.json lives in the desktop crate (non-default layout).
+          projectPath: crates/pinleaf-desktop
+          tagName: ${{ github.ref_name }}
+          releaseName: "Pinleaf ${{ github.ref_name }}"
+          releaseBody: |
+            Desktop sticky notes (Rust + Tauri v2).
+
+            Download **Pinleaf_<version>_x64-setup.exe** below and run it (per-user install, no admin).
+            The build is unsigned, so Windows SmartScreen may warn — choose *More info → Run anyway*.
+          releaseDraft: false
+          prerelease: false
