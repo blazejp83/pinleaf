@@ -184,11 +184,17 @@ function applyColor(n) {
 }
 function renderTitle() {
   const el = $("title");
-  if (current.title) {
-    el.textContent = current.title;
-    el.hidden = false;
-  } else {
-    el.hidden = true;
+  // Show the title field when a title is set, or while editing the note (so you can add one).
+  const show = !!(current.title && current.title.length) || mode === "edit";
+  el.hidden = !show;
+  if (show && document.activeElement !== el) el.value = current.title || "";
+}
+async function saveTitle(v) {
+  current.title = v.trim() ? v.trim() : null;
+  try {
+    await invoke("set_title", { title: v });
+  } catch (e) {
+    console.error("set_title", e);
   }
 }
 function renderMeta() {
@@ -260,6 +266,7 @@ function enterEdit() {
   $("rendered").hidden = true;
   $("toolbar").hidden = false;
   b.hidden = false;
+  renderTitle(); // reveal the title field for editing
   b.focus();
   b.setSelectionRange(b.value.length, b.value.length);
 }
@@ -271,6 +278,7 @@ function exitEdit() {
   $("toolbar").hidden = true;
   $("rendered").hidden = false;
   renderBody();
+  renderTitle(); // hide the title field again if no title was set
   saveNow();
 }
 
@@ -490,6 +498,19 @@ window.addEventListener("DOMContentLoaded", () => {
   $("rendered").addEventListener("dblclick", (e) => {
     if (e.target.closest("input, a")) return; // don't edit when toggling a checkbox / clicking a link
     enterEdit();
+  });
+
+  // Title field: live-update current, save on blur/Enter, Enter jumps to the body.
+  $("title").addEventListener("input", (e) => {
+    current.title = e.target.value;
+  });
+  $("title").addEventListener("change", (e) => saveTitle(e.target.value));
+  $("title").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      saveTitle(e.target.value);
+      enterEdit();
+    }
   });
 
   // Toolbar: mousedown + preventDefault keeps the textarea focused/selected during the action.

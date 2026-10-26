@@ -191,6 +191,27 @@ fn set_tags(window: WebviewWindow, state: State<AppState>, tags: Vec<String>) ->
 }
 
 #[tauri::command]
+fn set_title(
+    app: AppHandle,
+    window: WebviewWindow,
+    state: State<AppState>,
+    title: String,
+) -> Result<(), String> {
+    let id = window.label().to_string();
+    {
+        let mut store = state.store.lock().map_err(|e| e.to_string())?;
+        let mut note = store.get_note(&id).map_err(|e| e.to_string())?;
+        let t = title.trim();
+        note.title = if t.is_empty() { None } else { Some(t.to_string()) };
+        note.title_type = if t.is_empty() { TitleType::Auto } else { TitleType::Custom };
+        note.modified_on = now_ms();
+        store.put_note(&note).map_err(|e| e.to_string())?;
+    }
+    refresh_tray_menu(&app); // tray "Open note" labels use the title
+    Ok(())
+}
+
+#[tauri::command]
 fn set_skin(window: WebviewWindow, state: State<AppState>, skin: String) -> Result<(), String> {
     let id = window.label().to_string();
     let mut store = state.store.lock().map_err(|e| e.to_string())?;
@@ -763,8 +784,8 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            load_note, save_body, set_color, set_due, snooze, set_tags, set_skin, new_note,
-            close_note, delete_note, open_url, insert_image, insert_image_path, get_image
+            load_note, save_body, set_title, set_color, set_due, snooze, set_tags, set_skin,
+            new_note, close_note, delete_note, open_url, insert_image, insert_image_path, get_image
         ])
         .build(tauri::generate_context!())
         .expect("error while building Pinleaf")

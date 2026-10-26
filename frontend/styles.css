@@ -92,6 +92,17 @@ body {
   font-size: 15px;
   padding: 0 12px 2px;
   color: var(--ink);
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+.title::placeholder {
+  color: var(--ink-soft);
+  opacity: 0.55;
+  font-weight: 400;
 }
 
 .meta {
