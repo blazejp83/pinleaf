@@ -226,6 +226,9 @@ body {
   top: 28px;
   right: 6px;
   width: 210px;
+  max-height: calc(100vh - 36px); /* never taller than the note window */
+  overflow-y: auto; /* scroll (incl. mouse wheel) when content doesn't fit */
+  overscroll-behavior: contain;
   background: #fffdf5;
   color: var(--ink);
   border: 1px solid rgba(0, 0, 0, 0.12);
