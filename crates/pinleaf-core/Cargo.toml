@@ -1,0 +1,14 @@
+[package]
+name = "pinleaf-core"
+version = "0.0.1"
+description = "Pinleaf core domain: entities, enums, and the storage port. UI/OS/SQL-agnostic."
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+# Local SQLite StoragePort. `bundled` compiles SQLite from source (needs a C compiler),
+# so there is no system libsqlite3 requirement.
+rusqlite = { version = "0.31", features = ["bundled"] }
+# Client-generated UUID ids.
+uuid = { version = "1", features = ["v4"] }

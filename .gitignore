@@ -1,0 +1,24 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+# Build outputs
+/dist/
+/build/
+/target/
+node_modules/
+# Local data / runtime
+*.log
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+/.local/
+
+# Tauri generated
+/crates/pinleaf-desktop/gen/
+
+# Reverse-engineering material kept private (see ~/pinleaf-private)
+/docs/research/
+/docs/BUILD_SPEC.md

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Pinleaf",
+  "version": "0.0.1",
+  "identifier": "com.pinleaf.desktop",
+  "build": {
+    "frontendDist": "../../frontend"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "security": { "csp": null },
+    "windows": []
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "publisher": "Pinleaf",
+    "copyright": "© 2026 Pinleaf",
+    "category": "Productivity",
+    "shortDescription": "Desktop sticky notes",
+    "longDescription": "Pinleaf — fast, skinnable desktop sticky notes with Markdown, reminders, tags and images.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

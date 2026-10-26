@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pinleaf Note</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="note" id="note">
+      <div class="titlebar" data-tauri-drag-region>
+        <span class="spacer" data-tauri-drag-region></span>
+        <button class="icon-btn" id="gear" title="Note settings">⚙</button>
+        <button class="icon-btn close" id="close" title="Close note">✕</button>
+      </div>
+      <div class="title" id="title" hidden data-tauri-drag-region></div>
+      <div class="meta" id="meta" hidden data-tauri-drag-region>
+        <span class="due" id="due" hidden></span>
+        <span class="tags" id="tags"></span>
+      </div>
+      <div class="toolbar" id="toolbar" hidden>
+        <button data-act="bold" title="Bold"><b>B</b></button>
+        <button data-act="italic" title="Italic"><i>I</i></button>
+        <button data-act="strike" title="Strikethrough"><s>S</s></button>
+        <button data-act="mark" title="Highlight">H</button>
+        <button data-act="code" title="Code">&lt;/&gt;</button>
+        <button data-act="link" title="Link">🔗</button>
+        <button data-act="h" title="Heading">#</button>
+        <button data-act="ul" title="Bullet list">•</button>
+        <button data-act="task" title="Checklist">☑</button>
+        <button data-act="table" title="Table">▦</button>
+        <button data-act="image" title="Insert image">🖼</button>
+      </div>
+      <input type="file" id="file-input" accept="image/*" hidden />
+      <div class="rendered" id="rendered"></div>
+      <textarea class="body" id="body" spellcheck="true" placeholder="Write…" hidden></textarea>
+
+      <div class="popover" id="popover" hidden>
+        <div class="pop-section">
+          <div class="pop-label">Color</div>
+          <div class="swatches" id="swatches"></div>
+        </div>
+        <div class="pop-section">
+          <div class="pop-label">Skin</div>
+          <div class="skins" id="skins"></div>
+        </div>
+        <div class="pop-section">
+          <div class="pop-label">Due date</div>
+          <div class="due-row">
+            <input type="datetime-local" id="due-input" />
+            <button id="due-clear" class="mini">Clear</button>
+          </div>
+          <div class="due-row2">
+            <span>Repeat</span>
+            <select id="repeat-input">
+              <option value="none">None</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+            </select>
+            <button id="snooze" class="mini" hidden>Snooze 10m</button>
+          </div>
+        </div>
+        <div class="pop-section">
+          <div class="pop-label">Tags</div>
+          <div class="chips" id="chips"></div>
+          <input type="text" id="tag-input" class="tag-input" placeholder="add tag, press Enter" />
+        </div>
+        <div class="pop-section">
+          <button id="delete" class="danger">Delete note</button>
+        </div>
+      </div>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>

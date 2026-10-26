@@ -1,0 +1,14 @@
+[workspace]
+resolver = "2"
+members = ["crates/pinleaf-core", "crates/pinleaf-desktop"]
+# Bare `cargo build`/`test` (e.g. in WSL) touches only the portable core; the Tauri
+# desktop shell is built explicitly on Windows with `-p pinleaf-desktop`.
+default-members = ["crates/pinleaf-core"]
+
+# pinleaf-core builds/tests anywhere (incl. WSL). pinleaf-desktop (Tauri) builds on
+# Windows via WebView2; see docs/ARCHITECTURE.md.
+
+[workspace.package]
+edition = "2021"
+license = "MIT"
+rust-version = "1.77"

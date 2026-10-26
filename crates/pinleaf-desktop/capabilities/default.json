@@ -1,0 +1,11 @@
+{
+  "identifier": "default",
+  "description": "Pinleaf default capability — core APIs for the note window.",
+  "windows": ["*"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-start-dragging",
+    "core:event:default",
+    "notification:default"
+  ]
+}
