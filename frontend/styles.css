@@ -93,6 +93,14 @@ body {
   color: #e0a81e;
 }
 
+/* rolled-up note: only the title bar (+ title) shows */
+.note.rolled .rendered,
+.note.rolled .body,
+.note.rolled .toolbar,
+.note.rolled .meta {
+  display: none;
+}
+
 /* completed note: strike the title + body text */
 .note.completed .title,
 .note.completed .rendered {

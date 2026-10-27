@@ -222,6 +222,24 @@ function renderMeta() {
 }
 
 // ---------- body view/edit ----------
+// ---------- roll-up ----------
+function applyRoll(rolled) {
+  $("note").classList.toggle("rolled", !!rolled);
+  const b = $("roll");
+  b.textContent = rolled ? "▴" : "▾";
+  b.title = rolled ? "Roll down" : "Roll up";
+  b.classList.toggle("active", !!rolled);
+}
+async function setRolled(v) {
+  current.rolled = v;
+  applyRoll(v);
+  try {
+    await invoke("set_rolled", { rolled: v }); // backend resizes the window
+  } catch (e) {
+    console.error("set_rolled", e);
+  }
+}
+
 // ---------- note flags (star / completed / stay-on-top / transparency) ----------
 function applyFlags() {
   const star = $("star");
@@ -495,6 +513,7 @@ async function loadNote() {
   applyColor(current.color);
   applySkin(current.skin);
   applyFlags();
+  applyRoll(current.rolled);
   renderTitle();
   renderMeta();
   renderBody();
@@ -605,6 +624,7 @@ window.addEventListener("DOMContentLoaded", () => {
     pop.hidden = !pop.hidden;
     if (!pop.hidden) refreshPopover();
   });
+  $("roll").addEventListener("click", () => setRolled(!current.rolled));
   $("star").addEventListener("click", () => setStarred(!current.starred));
   $("pin").addEventListener("click", () => setStayOnTop(!current.stay_on_top));
   $("completed").addEventListener("change", (e) => setCompleted(e.target.checked));

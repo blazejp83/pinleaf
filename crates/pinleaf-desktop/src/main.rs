@@ -10,15 +10,25 @@ use serde::Serialize;
 use tauri::{
     menu::{IsMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu},
     tray::TrayIconBuilder,
-    AppHandle, Manager, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder, WindowEvent, Wry,
+    AppHandle, LogicalSize, Manager, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder,
+    WindowEvent, Wry,
 };
 use tauri_plugin_global_shortcut::ShortcutState;
 
 use base64::Engine;
 use pinleaf_core::{
     new_id, Memoboard, MemoboardType, Note, NoteObject, Reminder, RepeatType, SqliteStore,
-    StoragePort, StoreResult, TitleType,
+    StoragePort, StoreResult, TitleType, ViewType,
 };
+
+/// Collapsed (rolled-up) window height in CSS px: title bar, plus the title row if present.
+fn collapsed_height(note: &Note) -> f64 {
+    if note.title.is_some() {
+        52.0
+    } else {
+        28.0
+    }
+}
 
 fn now_ms() -> i64 {
     std::time::SystemTime::now()
@@ -48,6 +58,7 @@ struct NoteDto {
     completed: bool,
     stay_on_top: bool,
     transparency: u8,
+    rolled: bool,
 }
 
 fn repeat_to_str(r: RepeatType) -> &'static str {
@@ -113,6 +124,7 @@ fn load_note(window: WebviewWindow, state: State<AppState>) -> Result<NoteDto, S
         completed: note.completed,
         stay_on_top: note.stay_on_top,
         transparency: note.transparency,
+        rolled: note.view_type == ViewType::RolledUp,
         id: note.id,
         title: note.title,
         body: note.body,
@@ -248,6 +260,27 @@ fn set_stay_on_top(window: WebviewWindow, state: State<AppState>, on: bool) -> R
     note.stay_on_top = on;
     note.modified_on = now_ms();
     store.put_note(&note).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn set_rolled(window: WebviewWindow, state: State<AppState>, rolled: bool) -> Result<(), String> {
+    let id = window.label().to_string();
+    let (w, h) = {
+        let mut store = state.store.lock().map_err(|e| e.to_string())?;
+        let mut note = store.get_note(&id).map_err(|e| e.to_string())?;
+        note.view_type = if rolled { ViewType::RolledUp } else { ViewType::Normal };
+        note.modified_on = now_ms();
+        let w = note.size.0 as f64;
+        let h = if rolled {
+            collapsed_height(&note)
+        } else {
+            note.size.1 as f64
+        };
+        store.put_note(&note).map_err(|e| e.to_string())?;
+        (w, h)
+    };
+    window.set_size(LogicalSize::new(w, h)).map_err(|e| e.to_string())?;
+    Ok(())
 }
 
 #[tauri::command]
@@ -401,7 +434,10 @@ fn save_geometry(state: &AppState, id: &str, x: i32, y: i32, w: i32, h: i32) {
     if let Ok(mut store) = state.store.lock() {
         if let Ok(mut note) = store.get_note(id) {
             note.position = (x, y);
-            note.size = (w, h);
+            // Don't let the collapsed height overwrite the saved full size while rolled up.
+            if note.view_type != ViewType::RolledUp {
+                note.size = (w, h);
+            }
             note.modified_on = now_ms();
             let _ = store.put_note(&note);
         }
@@ -442,8 +478,15 @@ fn open_note_window(app: &AppHandle, note: &Note) -> tauri::Result<()> {
         .resizable(true)
         .shadow(false)
         .visible(false)
-        .min_inner_size(180.0, 140.0)
-        .inner_size(note.size.0 as f64, note.size.1 as f64)
+        .min_inner_size(150.0, 28.0)
+        .inner_size(
+            note.size.0 as f64,
+            if note.view_type == ViewType::RolledUp {
+                collapsed_height(note)
+            } else {
+                note.size.1 as f64
+            },
+        )
         .build()?;
 
     if note.position != (0, 0) {
@@ -837,7 +880,7 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             load_note, save_body, set_title, set_color, set_due, snooze, set_tags, set_skin,
-            set_starred, set_completed, set_stay_on_top, set_transparency,
+            set_starred, set_completed, set_stay_on_top, set_transparency, set_rolled,
             new_note, close_note, delete_note, open_url, insert_image, insert_image_path, get_image
         ])
         .build(tauri::generate_context!())
