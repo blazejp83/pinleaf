@@ -469,7 +469,13 @@ window.addEventListener("DOMContentLoaded", () => {
     current.body = body.value;
     scheduleSave();
   });
-  body.addEventListener("blur", exitEdit);
+  body.addEventListener("blur", (e) => {
+    // Stay in edit mode when focus moves to the title field or the toolbar; only exit when
+    // focus actually leaves the note's editing controls.
+    const to = e.relatedTarget;
+    if (to && (to.id === "title" || (to.closest && to.closest("#toolbar")))) return;
+    exitEdit();
+  });
   body.addEventListener("paste", async (e) => {
     const items = e.clipboardData && e.clipboardData.items;
     if (!items) return;
