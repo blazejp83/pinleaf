@@ -11,9 +11,18 @@
     "security": { "csp": null },
     "windows": []
   },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/blazejp83/pinleaf/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDFCMEQ2NEUwOUY2MjM5QTYKUldTbU9XS2Y0R1FORzlRcm83ZWlEYW1HR091TmNCb2FteEFzK2hTczR1VkxwUTkvMmlQR1h6cTUK"
+    }
+  },
   "bundle": {
     "active": true,
     "targets": ["nsis"],
+    "createUpdaterArtifacts": true,
     "publisher": "Pinleaf",
     "copyright": "© 2026 Pinleaf",
     "category": "Productivity",

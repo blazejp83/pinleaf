@@ -648,6 +648,7 @@ fn build_tray_menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
 
     let new_i = MenuItem::with_id(app, "new", "New note", true, Some("CmdOrCtrl+Alt+N"))?;
     let show_i = MenuItem::with_id(app, "showall", "Show all notes", true, None::<&str>)?;
+    let update_i = MenuItem::with_id(app, "update", "Check for updates", true, None::<&str>)?;
     let quit_i = MenuItem::with_id(app, "quit", "Quit Pinleaf", true, None::<&str>)?;
 
     let notes = app
@@ -695,6 +696,7 @@ fn build_tray_menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
             &PredefinedMenuItem::separator(app)?,
             &trash_sub,
             &PredefinedMenuItem::separator(app)?,
+            &update_i,
             &quit_i,
         ],
     )
@@ -723,6 +725,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
                     "emptytrash" => {
                         let _ = empty_trash(app);
                     }
+                    "update" => run_update(app),
                     "quit" => app.exit(0),
                     _ => {}
                 }
@@ -730,6 +733,35 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
         })
         .build(app)?;
     Ok(())
+}
+
+/// Post a quick OS notification (best-effort).
+fn notify(app: &AppHandle, title: &str, body: &str) {
+    use tauri_plugin_notification::NotificationExt;
+    let _ = app.notification().builder().title(title).body(body).show();
+}
+
+/// Check GitHub releases for a newer version; if found, download, install, and relaunch.
+fn run_update(app: &AppHandle) {
+    use tauri_plugin_updater::UpdaterExt;
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        let updater = match app.updater() {
+            Ok(u) => u,
+            Err(e) => return notify(&app, "Pinleaf update", &format!("Updater error: {e}")),
+        };
+        match updater.check().await {
+            Ok(Some(update)) => {
+                notify(&app, "Pinleaf", &format!("Updating to {}…", update.version));
+                match update.download_and_install(|_, _| {}, || {}).await {
+                    Ok(_) => app.restart(),
+                    Err(e) => notify(&app, "Pinleaf update failed", &e.to_string()),
+                }
+            }
+            Ok(None) => notify(&app, "Pinleaf", "You're on the latest version."),
+            Err(e) => notify(&app, "Pinleaf update", &format!("Check failed: {e}")),
+        }
+    });
 }
 
 /// Rebuild the tray menu to reflect the current set of notes (after create/delete).
@@ -798,6 +830,7 @@ fn main() {
                 let _ = show_all(app);
             }
         }))
+        .plugin(tauri_plugin_updater::Builder::new().build())
         // Serve note images to the webview: <img src="pinleaf://object/<id>">.
         .register_uri_scheme_protocol("pinleaf", |ctx, request| {
             let id = request
