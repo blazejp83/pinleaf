@@ -1,6 +1,6 @@
 [package]
 name = "pinleaf-core"
-version = "0.0.3"
+version = "0.0.4"
 description = "Pinleaf core domain: entities, enums, and the storage port. UI/OS/SQL-agnostic."
 edition.workspace = true
 license.workspace = true
