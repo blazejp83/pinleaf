@@ -1,6 +1,6 @@
 [package]
 name = "pinleaf-desktop"
-version = "0.0.2"
+version = "0.0.3"
 description = "Pinleaf desktop shell (Tauri v2). Builds on Windows."
 edition.workspace = true
 license.workspace = true
