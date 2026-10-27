@@ -10,6 +10,8 @@
     <div class="note" id="note">
       <div class="titlebar" data-tauri-drag-region>
         <span class="spacer" data-tauri-drag-region></span>
+        <button class="icon-btn" id="star" title="Star">☆</button>
+        <button class="icon-btn" id="pin" title="Stay on top">📌</button>
         <button class="icon-btn" id="gear" title="Note settings">⚙</button>
         <button class="icon-btn close" id="close" title="Close note">✕</button>
       </div>
@@ -64,6 +66,11 @@
           <div class="pop-label">Tags</div>
           <div class="chips" id="chips"></div>
           <input type="text" id="tag-input" class="tag-input" placeholder="add tag, press Enter" />
+        </div>
+        <div class="pop-section">
+          <label class="pop-check"><input type="checkbox" id="completed" /> Completed</label>
+          <div class="pop-label" style="margin-top: 8px">Transparency</div>
+          <input type="range" id="transparency" min="30" max="100" step="5" />
         </div>
         <div class="pop-section">
           <button id="delete" class="danger">Delete note</button>

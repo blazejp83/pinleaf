@@ -44,6 +44,10 @@ struct NoteDto {
     due_ms: Option<i64>,
     repeat: String, // "none" | "daily" | "weekly"
     tags: Vec<String>,
+    starred: bool,
+    completed: bool,
+    stay_on_top: bool,
+    transparency: u8,
 }
 
 fn repeat_to_str(r: RepeatType) -> &'static str {
@@ -105,6 +109,10 @@ fn load_note(window: WebviewWindow, state: State<AppState>) -> Result<NoteDto, S
         .to_string();
     let tags = store.get_note_tags(&id).map_err(|e| e.to_string())?;
     Ok(NoteDto {
+        starred: note.starred,
+        completed: note.completed,
+        stay_on_top: note.stay_on_top,
+        transparency: note.transparency,
         id: note.id,
         title: note.title,
         body: note.body,
@@ -209,6 +217,47 @@ fn set_title(
     }
     refresh_tray_menu(&app); // tray "Open note" labels use the title
     Ok(())
+}
+
+#[tauri::command]
+fn set_starred(window: WebviewWindow, state: State<AppState>, starred: bool) -> Result<(), String> {
+    let id = window.label().to_string();
+    let mut store = state.store.lock().map_err(|e| e.to_string())?;
+    let mut note = store.get_note(&id).map_err(|e| e.to_string())?;
+    note.starred = starred;
+    note.modified_on = now_ms();
+    store.put_note(&note).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn set_completed(window: WebviewWindow, state: State<AppState>, completed: bool) -> Result<(), String> {
+    let id = window.label().to_string();
+    let mut store = state.store.lock().map_err(|e| e.to_string())?;
+    let mut note = store.get_note(&id).map_err(|e| e.to_string())?;
+    note.completed = completed;
+    note.modified_on = now_ms();
+    store.put_note(&note).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn set_stay_on_top(window: WebviewWindow, state: State<AppState>, on: bool) -> Result<(), String> {
+    let _ = window.set_always_on_top(on);
+    let id = window.label().to_string();
+    let mut store = state.store.lock().map_err(|e| e.to_string())?;
+    let mut note = store.get_note(&id).map_err(|e| e.to_string())?;
+    note.stay_on_top = on;
+    note.modified_on = now_ms();
+    store.put_note(&note).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn set_transparency(window: WebviewWindow, state: State<AppState>, value: u8) -> Result<(), String> {
+    let id = window.label().to_string();
+    let mut store = state.store.lock().map_err(|e| e.to_string())?;
+    let mut note = store.get_note(&id).map_err(|e| e.to_string())?;
+    note.transparency = value;
+    note.modified_on = now_ms();
+    store.put_note(&note).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -401,6 +450,9 @@ fn open_note_window(app: &AppHandle, note: &Note) -> tauri::Result<()> {
         let _ = win.set_position(tauri::PhysicalPosition::new(note.position.0, note.position.1));
     } else {
         let _ = win.center();
+    }
+    if note.stay_on_top {
+        let _ = win.set_always_on_top(true);
     }
     let _ = win.show();
     let _ = win.set_focus();
@@ -785,6 +837,7 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             load_note, save_body, set_title, set_color, set_due, snooze, set_tags, set_skin,
+            set_starred, set_completed, set_stay_on_top, set_transparency,
             new_note, close_note, delete_note, open_url, insert_image, insert_image_path, get_image
         ])
         .build(tauri::generate_context!())

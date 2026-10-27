@@ -86,6 +86,32 @@ body {
 .icon-btn.close:hover {
   color: #c0392b;
 }
+.icon-btn.active {
+  opacity: 1;
+}
+#star.active {
+  color: #e0a81e;
+}
+
+/* completed note: strike the title + body text */
+.note.completed .title,
+.note.completed .rendered {
+  text-decoration: line-through;
+  opacity: 0.75;
+}
+
+.pop-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink);
+  cursor: pointer;
+}
+#transparency {
+  width: 100%;
+  box-sizing: border-box;
+}
 
 .title {
   font-weight: 600;

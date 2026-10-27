@@ -222,6 +222,41 @@ function renderMeta() {
 }
 
 // ---------- body view/edit ----------
+// ---------- note flags (star / completed / stay-on-top / transparency) ----------
+function applyFlags() {
+  const star = $("star");
+  star.textContent = current.starred ? "★" : "☆";
+  star.classList.toggle("active", !!current.starred);
+  $("pin").classList.toggle("active", !!current.stay_on_top);
+  $("note").classList.toggle("completed", !!current.completed);
+  const t = current.transparency == null ? 255 : current.transparency;
+  $("note").style.opacity = String(Math.max(0.2, t / 255));
+}
+async function setStarred(v) {
+  current.starred = v;
+  applyFlags();
+  try { await invoke("set_starred", { starred: v }); } catch (e) { console.error("set_starred", e); }
+}
+async function setStayOnTop(v) {
+  current.stay_on_top = v;
+  applyFlags();
+  try { await invoke("set_stay_on_top", { on: v }); } catch (e) { console.error("set_stay_on_top", e); }
+}
+async function setCompleted(v) {
+  current.completed = v;
+  applyFlags();
+  try { await invoke("set_completed", { completed: v }); } catch (e) { console.error("set_completed", e); }
+}
+let transpTimer = null;
+function setTransparency(pct) {
+  current.transparency = Math.round((pct / 100) * 255);
+  applyFlags();
+  clearTimeout(transpTimer);
+  transpTimer = setTimeout(() => {
+    invoke("set_transparency", { value: current.transparency }).catch((e) => console.error("set_transparency", e));
+  }, 300);
+}
+
 function renderBody() {
   const r = $("rendered");
   r.innerHTML = renderMarkdown(current.body || "");
@@ -415,6 +450,8 @@ function refreshPopover() {
   $("due-input").value = current.due_ms != null ? toInputValue(current.due_ms) : "";
   $("repeat-input").value = current.repeat || "none";
   updateSnoozeVisibility();
+  $("completed").checked = !!current.completed;
+  $("transparency").value = String(Math.round(((current.transparency == null ? 255 : current.transparency) / 255) * 100));
   renderChipsEditor();
 }
 async function setColor(c) {
@@ -457,6 +494,7 @@ async function loadNote() {
   current = await invoke("load_note");
   applyColor(current.color);
   applySkin(current.skin);
+  applyFlags();
   renderTitle();
   renderMeta();
   renderBody();
@@ -567,6 +605,10 @@ window.addEventListener("DOMContentLoaded", () => {
     pop.hidden = !pop.hidden;
     if (!pop.hidden) refreshPopover();
   });
+  $("star").addEventListener("click", () => setStarred(!current.starred));
+  $("pin").addEventListener("click", () => setStayOnTop(!current.stay_on_top));
+  $("completed").addEventListener("change", (e) => setCompleted(e.target.checked));
+  $("transparency").addEventListener("input", (e) => setTransparency(parseInt(e.target.value, 10)));
   $("close").addEventListener("click", () => invoke("close_note"));
   $("delete").addEventListener("click", () => {
     invoke("delete_note").catch((e) => console.error("delete_note", e));
